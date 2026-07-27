@@ -1,0 +1,37 @@
+{
+  "name": "cityu-resilience-twin-backend",
+  "version": "1.0.0",
+  "description": "CityU YEUNG Building Resilience Digital Twin - Backend API. A digital twin dashboard combining real energy data, climate hazard exposure, and spatial resilience indicators for CityU's YEUNG Building.",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "node dist/app.js",
+    "dev": "nodemon src/app.ts",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "seed": "ts-node src/scripts/seedDatabase.ts",
+    "generate-data": "ts-node src/scripts/syntheticGenerator.ts",
+    "lint": "eslint src/**/*.ts",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "mongoose": "^8.20.0",
+    "socket.io": "^4.8.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.1",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

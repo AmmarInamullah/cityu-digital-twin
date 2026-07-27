@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+__pycache__/
+*.pyc
+.next/
+out/
+*.egg-info/
+venv/
+.venv/
+ml/output/
+ml/data/
+*.rar
