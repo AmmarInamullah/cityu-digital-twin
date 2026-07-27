@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Lazy load pages for code splitting
 const DashboardView = dynamic(() => import('@/components/views/DashboardView'), { ssr: false });
@@ -101,14 +102,16 @@ export default function App() {
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
-        {activeView === 'dashboard' && <DashboardView />}
-        {activeView === 'analytics' && <AnalyticsView />}
-        {activeView === 'forecast' && <ForecastView />}
-        {activeView === 'alerts' && <AlertsView />}
-        {activeView === 'simulator' && <SimulatorView />}
-        {activeView === 'room' && <RoomSimulatorView />}
-        {activeView === 'game' && <GameView />}
-        {activeView === 'methodology' && <MethodologyView />}
+        <ErrorBoundary key={activeView}>
+          {activeView === 'dashboard' && <DashboardView />}
+          {activeView === 'analytics' && <AnalyticsView />}
+          {activeView === 'forecast' && <ForecastView />}
+          {activeView === 'alerts' && <AlertsView />}
+          {activeView === 'simulator' && <SimulatorView />}
+          {activeView === 'room' && <RoomSimulatorView />}
+          {activeView === 'game' && <GameView />}
+          {activeView === 'methodology' && <MethodologyView />}
+        </ErrorBoundary>
       </main>
     </div>
   );

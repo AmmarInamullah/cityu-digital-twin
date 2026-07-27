@@ -26,6 +26,7 @@ const SEVERITY_CONFIG = {
 export default function AlertsView() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [stats, setStats] = useState<AlertStats | null>(null);
+  const [totalReadings, setTotalReadings] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
 
@@ -37,14 +38,17 @@ export default function AlertsView() {
         const bid = buildings.data?.[0]?._id;
         if (!bid) return;
 
-        const [aRes, sRes] = await Promise.all([
+        const [aRes, sRes, rRes] = await Promise.all([
           fetch(`/api/alerts/${bid}?limit=50`),
           fetch(`/api/alerts/${bid}/stats`),
+          fetch(`/api/readings/${bid}?metricType=energy_kwh&limit=10000`),
         ]);
         const aData = await aRes.json();
         const sData = await sRes.json();
+        const rData = await rRes.json();
         setAlerts(aData.data || []);
         setStats(sData.data || null);
+        setTotalReadings(rData.count || 0);
       } catch (err) { console.error(err); }
       setLoading(false);
     }
@@ -66,7 +70,7 @@ export default function AlertsView() {
       <div className="border-b px-8 py-5" style={{ borderColor: 'var(--border-subtle)' }}>
         <h1 className="text-xl font-semibold tracking-tight">Alerts & Anomalies</h1>
         <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-          ML-detected anomalies and threshold breaches
+          Threshold-based anomaly detection (1.5x hourly average)
         </p>
       </div>
 
@@ -87,8 +91,10 @@ export default function AlertsView() {
           </div>
           <div className="rounded-xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
             <div className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Detection Rate</div>
-            <div className="text-3xl font-bold font-mono mt-1" style={{ color: 'var(--accent-teal)' }}>0.8%</div>
-            <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>of all readings</div>
+            <div className="text-3xl font-bold font-mono mt-1" style={{ color: 'var(--accent-teal)' }}>
+              {totalReadings > 0 ? `${((stats?.total || 0) / totalReadings * 100).toFixed(1)}%` : '—'}
+            </div>
+            <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>of {totalReadings.toLocaleString()} readings</div>
           </div>
         </div>
 

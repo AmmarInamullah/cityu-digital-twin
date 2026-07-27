@@ -6,6 +6,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import connectDB from './config/database';
 import { env } from './config/env';
 import { errorHandler } from './middleware/errorHandler';
+import { apiRateLimit, writeRateLimit } from './middleware/rateLimit';
 import { WebSocketService } from './services/websocketService';
 import readingRoutes from './routes/readingRoutes';
 import buildingRoutes from './routes/buildingRoutes';
@@ -24,11 +25,11 @@ app.use(cors({ origin: env.ALLOWED_ORIGINS, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 
 // API Routes
-app.use('/api/readings', readingRoutes);
-app.use('/api/buildings', buildingRoutes);
-app.use('/api/resilience', resilienceRoutes);
-app.use('/api/alerts', alertRoutes);
-app.use('/api/analysis', analysisRoutes);
+app.use('/api/readings', apiRateLimit, readingRoutes);
+app.use('/api/buildings', apiRateLimit, buildingRoutes);
+app.use('/api/resilience', apiRateLimit, resilienceRoutes);
+app.use('/api/alerts', apiRateLimit, alertRoutes);
+app.use('/api/analysis', apiRateLimit, analysisRoutes);
 
 // Health check
 app.get('/', (req, res) => {

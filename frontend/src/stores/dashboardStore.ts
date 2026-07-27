@@ -1,9 +1,10 @@
 'use client';
 import { create } from 'zustand';
-import { api, Building, DailyConsumption, HourlyConsumption, YearlyData, ResilienceResult, AlertData } from '@/lib/api';
+import { api, Building, DailyConsumption, HourlyConsumption, YearlyData, ResilienceResult, AlertData, BuildingConfig } from '@/lib/api';
 
 interface DashboardState {
   building: Building | null;
+  config: BuildingConfig | null;
   dailyData: DailyConsumption[];
   hourlyData: HourlyConsumption[];
   historicalData: YearlyData[];
@@ -15,11 +16,12 @@ interface DashboardState {
 
   loadDashboard: () => Promise<void>;
   loadHourlyData: (date: string) => Promise<void>;
-  simulateScenario: (adjustments: any) => Promise<ResilienceResult | null>;
+  simulateScenario: (adjustments: Record<string, unknown>) => Promise<ResilienceResult | null>;
 }
 
 export const useDashboardStore = create<DashboardState>((set, get) => ({
   building: null,
+  config: null,
   dailyData: [],
   hourlyData: [],
   historicalData: [],
@@ -37,17 +39,19 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       if (buildings.length === 0) throw new Error('No buildings found');
       const building = buildings[0];
 
-      const [dailyData, historicalData, resilience, alerts, hourlyData] = await Promise.all([
+      const [dailyData, historicalData, resilience, alerts, hourlyData, config] = await Promise.all([
         api.getDailyConsumption(building._id, 900),
         api.getHistoricalData(),
         api.getResilienceCurrent(building._id),
         api.getAlerts(building._id).catch(() => []),
         api.getHourlyConsumption(building._id, '2024-03-15'),
+        api.getConfig().catch(() => null),
       ]);
 
-      set({ building, dailyData, historicalData, resilience, alerts, hourlyData, loading: false });
-    } catch (err: any) {
-      set({ error: err.message, loading: false });
+      set({ building, config, dailyData, historicalData, resilience, alerts, hourlyData, loading: false });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      set({ error: message, loading: false });
     }
   },
 
@@ -58,7 +62,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     set({ hourlyData, selectedDate: date });
   },
 
-  simulateScenario: async (adjustments: any) => {
+  simulateScenario: async (adjustments: Record<string, unknown>) => {
     const { building } = get();
     if (!building) return null;
     const result = await api.simulateScenario(building._id, adjustments);

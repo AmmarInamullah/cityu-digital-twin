@@ -93,14 +93,27 @@ function BuildingDrillDown({ data, buildingId, onBack }: { data: any; buildingId
   const benchmark = (data.eui_benchmarks || []).find((b: any) => b.building_id === buildingId);
   const faults = (data.faults || []).filter((f: any) => f.building_id === buildingId);
   const interventions = (data.macc?.options || []).filter((o: any) => o.building_id === buildingId);
+  const [hourlyProfile, setHourlyProfile] = useState<Array<{ hour: number; kwh: number }>>([]);
 
-  // Generate a synthetic hourly profile for display
-  const hourlyProfile = Array.from({ length: 24 }, (_, h) => {
-    const baseShape = [0.42,0.38,0.36,0.35,0.36,0.40,0.55,0.78,1.05,1.30,1.38,1.42,1.40,1.44,1.42,1.38,1.32,1.20,1.02,0.85,0.72,0.60,0.52,0.45];
-    const eui = benchmark?.annual_eui || 200;
-    const hourlyBase = (eui * (benchmark?.peer_count || 5000)) / 8760;
-    return { hour: h, kwh: Math.round(hourlyBase * baseShape[h] / baseShape.reduce((a: number, b: number) => a + b, 0) * 24) };
-  });
+  useEffect(() => {
+    async function fetchHourly() {
+      try {
+        const bRes = await fetch('/api/buildings');
+        const buildings = await bRes.json();
+        const buildingId = buildings.data?.[0]?._id;
+        if (buildingId) {
+          const hrRes = await fetch(`/api/readings/${buildingId}/hourly?date=2024-06-15`);
+          const hrData = await hrRes.json();
+          if (hrData.data?.length > 0) {
+            setHourlyProfile(hrData.data);
+          }
+        }
+      } catch {
+        // Fallback: empty profile
+      }
+    }
+    fetchHourly();
+  }, []);
 
   const SEV: Record<string, { color: string; bg: string }> = { high: { color: 'var(--accent-red)', bg: 'var(--accent-red-dim)' }, medium: { color: 'var(--accent-amber)', bg: 'var(--accent-amber-dim)' }, low: { color: 'var(--accent-blue)', bg: 'var(--accent-blue-dim)' } };
 
@@ -133,7 +146,7 @@ function BuildingDrillDown({ data, buildingId, onBack }: { data: any; buildingId
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Hourly load profile */}
           <div className="rounded-xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
-            <div className="text-xs font-medium uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Typical Weekday Load Profile</div>
+            <div className="text-xs font-medium uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Reference Day Load Profile (YEUNG Building)</div>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={hourlyProfile}>
                 <defs><linearGradient id="loadGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--accent-teal)" stopOpacity={0.3} /><stop offset="95%" stopColor="var(--accent-teal)" stopOpacity={0} /></linearGradient></defs>

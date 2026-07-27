@@ -63,7 +63,7 @@ export class ReadingService {
     zoneId?: string;
     limit?: number;
   }): Promise<ISensorReading[]> {
-    const query: any = {
+    const query: Record<string, unknown> = {
       buildingId: new mongoose.Types.ObjectId(params.buildingId),
     };
 
@@ -71,12 +71,13 @@ export class ReadingService {
     if (params.zoneId) query.zoneId = params.zoneId;
 
     if (params.from || params.to) {
-      query.timestamp = {};
-      if (params.from) query.timestamp.$gte = new Date(params.from);
-      if (params.to) query.timestamp.$lte = new Date(params.to);
+      const timestamp: Record<string, Date> = {};
+      if (params.from) timestamp.$gte = new Date(params.from);
+      if (params.to) timestamp.$lte = new Date(params.to);
+      query.timestamp = timestamp;
     }
 
-    return SensorReading.find(query)
+    return SensorReading.find(query as any)
       .sort({ timestamp: -1 })
       .limit(params.limit || 1000)
       .lean() as any;

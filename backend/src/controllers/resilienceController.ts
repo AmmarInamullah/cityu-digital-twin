@@ -4,6 +4,7 @@ import ResilienceScore from '../models/ResilienceScore';
 import Alert from '../models/Alert';
 import { ReadingService } from '../services/readingService';
 import { calculateResilience, ResilienceInput } from '../services/resilienceService';
+import { WebSocketService } from '../services/websocketService';
 import { YEUNG_BASELINE_DAILY_KWH } from '../constants';
 
 export class ResilienceController {
@@ -29,6 +30,9 @@ export class ResilienceController {
       });
 
       const result = calculateResilience({ dailyKwh, anomalyCountLast24h: anomalyCount });
+
+      WebSocketService.broadcastResilienceScore(buildingId, result);
+
       res.json({ success: true, data: result });
     } catch (error) {
       next(error);
@@ -44,7 +48,6 @@ export class ResilienceController {
       const buildingId = req.params.buildingId as string;
       const { adjustments } = req.body;
 
-      // Use baseline as the starting point for what-if
       const input: ResilienceInput = {
         dailyKwh: YEUNG_BASELINE_DAILY_KWH,
         anomalyCountLast24h: 0,
@@ -52,10 +55,14 @@ export class ResilienceController {
       };
 
       const result = calculateResilience(input);
+
+      WebSocketService.broadcastResilienceScore(buildingId, result);
+
       res.json({ success: true, data: result });
     } catch (error) {
       next(error);
     }
+  }
   }
 
   /**

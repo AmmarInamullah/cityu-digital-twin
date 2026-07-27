@@ -68,11 +68,25 @@ export interface AlertStats {
   bySeverity: Record<string, number>;
 }
 
+export interface BuildingConfig {
+  gridEmissionFactor: number;
+  gridProvider: string;
+  baselineDailyKwh: number;
+  baselineGhgPerFloorArea: number;
+  targetGhgPerFloorArea2030: number;
+  resilienceWeights: {
+    energyPerformance: number;
+    co2Trajectory: number;
+    operationalAdaptability: number;
+  };
+}
+
 export const api = {
   getBuildings: () => fetchJSON<Building[]>('/buildings'),
   getBuilding: (id: string) => fetchJSON<Building>(`/buildings/${id}`),
   getHistoricalData: () => fetchJSON<YearlyData[]>('/buildings/historical-data'),
   getGHGScopes: () => fetchJSON<any>('/buildings/ghg-scopes'),
+  getConfig: () => fetchJSON<BuildingConfig>('/buildings/config'),
 
   getDailyConsumption: (buildingId: string, days = 900) =>
     fetchJSON<DailyConsumption[]>(`/readings/${buildingId}/daily?days=${days}`),

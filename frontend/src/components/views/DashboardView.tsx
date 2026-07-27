@@ -33,17 +33,18 @@ function PageHeader() {
   );
 }
 
-function StatsBar({ dailyData }: { dailyData: any[] }) {
+function StatsBar({ dailyData, config }: { dailyData: any[]; config: { gridEmissionFactor: number } | null }) {
   if (!dailyData.length) return null;
   const totalKwh = dailyData.reduce((s: number, d: any) => s + d.totalKwh, 0);
   const totalCo2 = dailyData.reduce((s: number, d: any) => s + d.co2Kg, 0);
   const avgDaily = totalKwh / dailyData.length;
+  const gridFactor = config?.gridEmissionFactor ?? 0.34;
 
   const stats = [
     { label: 'Annual Energy', value: `${(totalKwh / 1e6).toFixed(1)}M`, unit: 'kWh', color: 'var(--accent-teal)' },
     { label: 'Annual CO2', value: `${(totalCo2 / 1e6).toFixed(1)}M`, unit: 'kg CO2e', color: 'var(--accent-amber)' },
     { label: 'Avg. Daily', value: `${(avgDaily / 1000).toFixed(0)}k`, unit: 'kWh/day', color: 'var(--accent-blue)' },
-    { label: 'Grid Factor', value: '0.34', unit: 'kg/kWh (CLP)', color: 'var(--text-primary)' },
+    { label: 'Grid Factor', value: gridFactor.toFixed(2), unit: `kg/kWh (${config?.gridProvider || 'CLP'})`, color: 'var(--text-primary)' },
   ];
 
   return (
@@ -63,7 +64,7 @@ function StatsBar({ dailyData }: { dailyData: any[] }) {
 
 export default function DashboardView() {
   const {
-    building, dailyData, hourlyData, historicalData, resilience,
+    building, config, dailyData, hourlyData, historicalData, resilience,
     selectedDate, loading, error, loadDashboard, loadHourlyData,
   } = useDashboardStore();
 
@@ -96,7 +97,7 @@ export default function DashboardView() {
     <div>
       <PageHeader />
       <div className="p-8">
-        <StatsBar dailyData={dailyData} />
+        <StatsBar dailyData={dailyData} config={config} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div id="section-resilience"><ResilienceGauge data={resilience} /></div>
